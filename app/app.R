@@ -4,12 +4,12 @@ library(shinydashboard)
 library(tidyverse)
 library(glue)
 library(DT)
-library(googlesheets)
+# library(googlesheets)
 library(colourpicker)
 source("helpers.R")
 
 ## DATA IMPORT (googlesheets) -----------------------------------------------------------
-dat <- gs_title("rstudio_conf_2018_BUDGET") %>% gs_read()
+dat <- read.csv('budget.csv', stringsAsFactors=TRUE)
 
 ## UI -----------------------------------------------------------------------------------
 ## |__sidebar ---------------------------------------------------------------------------
@@ -76,7 +76,8 @@ body <- dashboardBody(
               "#419871", "#2afd77", "#fd852f", "#ed25bc", "#605ea6", "#d62161", "#111111"
             ))
         )
-      ),
+      )
+      ,
       fluidRow(
         tags$div(id = "placeholder")
       )
@@ -92,6 +93,7 @@ ui <- dashboardPage(skin = "purple",
 
 ## SERVER -------------------------------------------------------------------------------
 server <- function(input, output, session) { 
+  
   
   ## UTILITIES --------------------------------------------------------------------------
   tab_list <- NULL
@@ -191,14 +193,19 @@ server <- function(input, output, session) {
   })
   
   output$main_plot <- renderPlot({
+    
     base_ggplot <- subcategory_dat() %>% basePlot
     renderLandingPagePlot(base_ggplot)
   })
   
   observeEvent(input$main_plot_click, {
+    ### CFLAGG 
+    # browser()
     tree_dat <- subcategory_dat() %>% treemapified_dat
     clicked_square <- getClickedPoint(tree_dat, input$main_plot_click)
-    clicked_label <- as.character(clicked_square[1, "label"])
+    #clicked_label <- as.character(clicked_square[1, "label"]) # original
+    ## 2 problems: A. "label" doesn't exist in the data.frame (fatal error), B. as.character(clicked_square[1, "subcategory"]) returns a number instead of a subcategory like salary
+    clicked_label <- as.character(as.data.frame(clicked_square[,"subcategory"])[1,1])
     outputID <- glue("dt-{clicked_label}")
     btnID <- glue("hide-{outputID}")
     
